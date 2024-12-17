@@ -10,6 +10,8 @@
 #include <windows.h>
 #include <thread>
 #include <chrono>
+#include <random>   // For random number generation
+#include <ctime>
 
 
 class house
@@ -18,6 +20,7 @@ public:
 int house_id; 
 int lock_level;
 float house_worth;
+bool robbed = false;
         house() {}
     void set(int house_id, int lock_level, float house_worth)
     {
@@ -54,6 +57,7 @@ public:
     house H;
     Non_Home nh;
     Queue<int> movements;
+    float loot = 0.0;
     Person() {}
     Person(const Person& other) 
     : name(other.name),
@@ -93,18 +97,18 @@ public:
             Sleep(delayMs);
         }
     }
+
     void introduceNeightbour()
     {
         cout << "You approach House #" + to_string(this->H.house_id) + "...";
         cout << endl;
 
-        // Check if the house is a regular home or a special non-home structure
         if (!name.empty()) 
         {
-            // For regular houses
+
             if (this->H.house_id != 3 && this->H.house_id != 4 && this->H.house_id != 5) 
             {
-                // Regular house
+        
                 typeTextt("This house belongs to " + name + ".");
                 cout << endl;
 
@@ -124,7 +128,6 @@ public:
             } 
             else 
             {
-                // Special case for Node 3 (Park), 4 (Office), and 5 (Market)
                 if (this->H.house_id == 3)
                 {
                     typeTextt("This is the Park. It's a peaceful place with trees and benches.");
@@ -156,16 +159,15 @@ public:
             
             typeTextt("Time to move on to the next house...");
             cout << endl;
-            Sleep(2000); // Delay before clearing screen
-            system("cls"); // Clears the screen
+            Sleep(2000); 
+            system("cls"); 
         } 
         else 
         {
-            // If no one is home at a house
             typeTextt("It seems like no one is home at House #" + to_string(this->H.house_id) + ".");
             cout << endl;
-            Sleep(2000); // Delay before clearing screen
-            system("cls"); // Clears the screen
+            Sleep(2000);
+            system("cls"); 
         }
 
     }
@@ -173,7 +175,7 @@ public:
 
 };
 
-void typeText(const string& text, int delayMs = 1) 
+void typeText(const string& text, int delayMs = 0) 
 {
     for (char c : text) 
     {
@@ -184,21 +186,18 @@ void typeText(const string& text, int delayMs = 1)
 
 void visit_neighbours(Graph& G, AVL<Person>& Tree, int startNode) 
 {
-    //system("cls");
     cout << endl << endl;
 
     typeText("Day :01 It's time to meet your neighbors. Let's begin the journey through the neighbourhood!");
     cout << endl;
     int *visited = G.BFS(startNode);
 
-    //Tree.traverseTree();
-    //cout << G.size;
     for (int i = 1; i < 10; i++)
     {
         
         Tree.getResidentInfo(visited[i]);
         Sleep(1000);
-        //cout << visited[i] << " ";
+
     }
 
     system("cls");
@@ -207,11 +206,11 @@ void visit_neighbours(Graph& G, AVL<Person>& Tree, int startNode)
 }
 
 
-void run_game(AVL<Person> Tree, Person P)
+void run_game(AVL<Person> Tree, Person Player)
 {
    system("cls");
 
-    typeText("Day: 00 Welcome to the Neighbourhood Watch System!");
+    typeText("Day: 01 Welcome to the Neighbourhood Watch System!");
     cout << endl;
     
     typeText("Please enter your name: ");
@@ -249,10 +248,200 @@ void run_game(AVL<Person> Tree, Person P)
     typeText("Are you ready to begin your journey, " + name + "? Stay sharp and good luck!");
     cout << endl;
 
-     P.set(name, 100.0, 1, 8, 100.0, 1);
-    Tree.insert(P, P.H.house_id);
+
+    Player.set(name, 100.0, 1, 8, 100.0, 1);
+    // TODO: Make this better
+    Player.movements.enqueue(8);
+    Player.movements.enqueue(7);
+    Player.movements.enqueue(6); 
+    Player.movements.enqueue(3);
+    Player.movements.enqueue(9);
+    Player.movements.enqueue(2);
+    Player.movements.enqueue(5);
+    Player.movements.enqueue(0);
+    Tree.insert(Player, Player.H.house_id);
     
 
+}
+
+void steal(Person &Player, int id, Stack<int> &alert, Node_tree<Person> *person)
+{
+    if (Player.weapon_level >= person->obj.H.lock_level)
+    {
+        float loot = person->obj.H.house_worth * 0.5;
+        Player.loot += loot;
+        person->obj.H.house_worth -= loot;
+        person->obj.H.robbed = true;
+        int level = person->obj.H.house_worth * 0.2 + person->obj.H.lock_level + (loot/person->obj.H.house_worth * 0.8 + person->obj.H.lock_level);
+        level = level % 5;
+        alert.push(level);
+        cout << "\nYou stole: " << loot;
+        cout << "\nLevel is: " << level;
+        Player.weapon_level += level;
+    }
+    else
+    {
+        cout << "You can't steal this house. Your level is " << Player.weapon_level << ", While the house level is " << person->obj.H.lock_level;
+    }
+    
+}
+
+
+Queue<int> Move_player(Graph &G, AVL<Person> T, Person &Player, Stack<int> &alert)
+{
+    Sleep(1000);
+    system("cls");
+    typeText("Day: 03 - The time has come... The streets are empty, a blanket of silence drapes over the neighbourhood. The air is cold, but tonight you can feel the heat of opportunity.");
+    cout << endl;
+
+    int choice;
+    // Input validation for house selection
+    while (true)
+    {
+        typeText("You stand at the edge of the street, scanning the rows of dark houses.\nWhich house will you target? Choose wisely, for fortune favors the bold... ");
+        cout << endl;
+        cin >> choice;
+
+        if (choice >= 0 && choice < 10)  // Validate house range
+            break;
+        else
+            cerr << "Invalid house choice. Please select a valid house (0-9)." << endl;
+    }
+
+    Queue<int> q; // This will store the player's movements/choices as a path
+
+    typeText("\nYou take one last look around before slipping into the shadows. The plan is simple, but execution is everything.");
+    cout << endl;
+
+    // Let's run DFS to determine the movement path
+        
+    int *movement = G.DFS(8);  // Assume 8 is the starting point; you might want to dynamically adjust this based on player state
+    typeText("Step by step, you move cautiously. The pavement beneath your feet carries your ambition, but danger lingers at every corner.");
+    cout << endl;
+
+    // Enqueue the DFS path into the queue
+    bool found = false;
+    cout << "\nbefore loop: ";
+    for (int i = 0; i < G.size; i++)
+    {
+        cout << movement[i] << " ";
+        if (movement[i] == choice)  // Check if the movement path contains the player's chosen house
+        {
+            typeText("There it is... House #" + to_string(choice) + ". The lights are off, the windows dark. It's as if the house itself is holding its breath, waiting for your arrival.");
+            cout << endl;
+            found = true;
+            q.enqueue(movement[i]);
+            break;
+        }
+        q.enqueue(movement[i]);  // Enqueue the nodes from the DFS path
+    }
+
+    if (!found)
+    {
+        typeText("Your chosen house is not reachable through the available path. Something went wrong.");
+        cout << endl;
+        return q;  
+    }
+
+    typeText("You crouch behind a bush, eyes fixed on the house. You gather yourself, the calm before the storm.");
+    cout << endl;
+
+    Node_tree<Person>* person = T.getResidentInfo(choice, true);
+    if (person == nullptr)
+    {
+        typeText("\nYour heart skips a beat. This house... it doesn't exist. A trick of the mind or a ghost on the map?\n");
+        system("cls");
+        return q;  // Returning the current path
+    }
+
+    cout << "\nYou check your notes. This house belongs to **" << person->obj.name << "**.";
+    cout << "\nIts value is high—there's no room for mistakes tonight.";
+    cout << endl;
+
+    // Decide whether to steal or leave
+    string steal_house_choice;
+    cout << "\nThe time has come. Do you want to steal from this house or **leave** it behind? (steal/leave): ";
+    cin >> steal_house_choice;
+
+    if (steal_house_choice == "steal")
+    {
+        typeText("\nA sly grin crosses your face. You pull out the tools of your trade, each one a testament to your skills. Time bends as you work, every second ticking louder in your mind.");
+        cout << endl;
+        typeText("Hours seem to pass in a heartbeat. You map out the house's layout, avoid the creaks in the floorboards, and dance through shadows like a phantom.");
+        cout << endl;
+        typeText("Finally... success. You slip out, unseen and unheard. The house stands still, oblivious to your quiet triumph.");
+        typeText("\nThe night grows deeper. You exhale, clutching your prize, as you fade back into the darkness, ready to plan your next move.");
+        cout << endl;
+
+        // Call the steal function here to apply the loot and alert levels
+        steal(Player, choice, alert, person);
+    }
+    else
+    {
+        typeText("\nYou take one last look at the house, the prize within tempting you to change your mind... but not tonight. You disappear into the night, leaving the house untouched.");
+        cout << endl;
+    }
+    return q;  // Return the final movement path
+}
+
+
+bool compare_movement(Queue<int> &P, Graph &G, AVL<Person> T) 
+{
+    if (P.isEmpty()) 
+    {
+        return false;
+    }
+
+    bool house_stolen = false;
+    int *route = G.BFS(8);
+
+
+
+    for (int i = 0; i < G.size; i++)
+    {
+
+        Node_tree<Person> *stolen_house = T.getResidentInfo(route[i], true);
+        if (stolen_house->obj.H.robbed)
+        {
+            house_stolen = true;
+            break;
+        }
+    }
+
+    return (house_stolen);
+
+    
+}
+
+void perform_thefts(Graph &G, AVL<Person> &Tree, Person &Player, Stack<int> &alert) 
+{
+    srand(time(0));  // Initialize the random seed
+
+    // Generate a random number of thefts between 1 and 3
+    int random_thefts = (rand() % 3) + 1;
+    int current_thefts = 0;
+
+    do 
+    {
+        Queue<int> player_path = Move_player(G, Tree, Player, alert);
+
+        Queue<int> copy_player_path(player_path);
+
+        bool theft_detected = compare_movement(copy_player_path, G, Tree);
+        cout << "Your weapon level is: " << Player.weapon_level;
+
+        if (theft_detected) 
+        {
+            current_thefts++;
+            cout << "A robbery has been committed!" << endl;
+        }
+
+    } while (current_thefts < random_thefts);
+
+    cout << endl << "Police is behind you!" << endl;
+    cout << "You have done these levels of robbery: ";
+    alert.sortStack();  
+    alert.display(); 
 }
 
 
@@ -288,31 +477,22 @@ int main()
             getline(ss, type_worth, ',');
             getline(ss, m, ',');
 
-            stringstream s(m);
-            string loc01, loc02, loc03;
-            getline(s, loc01, ' ');
-            getline(s, loc02, ' ');
-            getline(s, loc03, ' ');
-
-
             Person P;
             P.set(name, stof(income) ,0, stoi(house_id) , stof(house_worth), stoi(lock_level), type, stof(type_worth));
-            P.movements.enqueue(stoi(loc01));
-            P.movements.enqueue(stoi(loc02));
-            P.movements.enqueue(stoi(loc03));
+            stringstream s(m);
+            string loc;
 
+            while (getline(s, loc, ' ')) 
+            {
+                P.movements.enqueue(stoi(loc)); // Convert to int and store in the vector
+            }
             Tree.insert(P, P.H.house_id);
 
         }
     }
-    
-    Person P;
-    run_game(Tree, P);
-    P.set("Qasim", 100.0, 1, 8, 100.0, 1);
-    P.movements.enqueue(8);
-    P.movements.enqueue(7);
-    P.movements.enqueue(3);
-    
+    Person Player;
+    run_game(Tree, Player);
+
     Person market;
     market.set("Market", 0.0, 0, 5, 5000.0, 3, "Market", 5000.0);
     Tree.insert(market, market.H.house_id);
@@ -340,5 +520,18 @@ int main()
     G.addEdge(3,6);
     G.addEdge(3,4);
     G.addEdge(2,5);
-    visit_neighbours(G, Tree, 8);    
+    visit_neighbours(G, Tree, 8);
+    
+    Player.set("Qasim", 100.0, 1, 8, 100.0, 1);
+    Player.movements.enqueue(8);
+    Player.movements.enqueue(7);
+    Player.movements.enqueue(6); 
+    Player.movements.enqueue(3);
+    Player.movements.enqueue(9);
+    Player.movements.enqueue(2);
+    Player.movements.enqueue(5);
+    Player.movements.enqueue(0);
+    Tree.insert(Player, Player.H.house_id);
+    Stack<int> alert;
+    perform_thefts(G, Tree, Player, alert);
 }

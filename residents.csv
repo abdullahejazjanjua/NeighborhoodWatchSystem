@@ -1,7 +1,7 @@
 name,house_id,income,house_worth,lock_level,type,type_worth,movements
-Adam,7,550,100,2,"none",0.0,7 2 3
-Ada,2,900,10000,10,"none",0.0,2 3 6
-John, 0, 1000, 55,1,"none",0.0,0 8 7
-Jane, 1, 10000, 90,2,"none",100,1 7 4
-Ahmad,6,700,900,5,"none",0.0,6 9 3
-Ilsa,9,600,700,4,"none",0.0,9 2 3
+Adam,7,550,100,2,"none",0.0,7 6 9 2 3 4 8 0
+Ada,2,900,10000,10,"none",0.0,2 3 6 9 7 4 8 0
+John,0,1000,55,1,"none",0.0,0 8 7 6 9 2 3 4
+Jane,1,10000,90,2,"none",100,1 7 4 3 6 9 2 8 0
+Ahmad,6,700,900,5,"none",0.0,6 9 2 3 4 7 8 0
+Ilsa,9,600,700,4,"none",0.0,9 6 7 4 3 2 8 0

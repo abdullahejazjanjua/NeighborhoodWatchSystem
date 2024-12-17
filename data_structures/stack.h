@@ -22,6 +22,11 @@ public:
         head = nullptr;
     }
 
+    bool isEmpty()
+    {
+        return head == nullptr;
+    }
+
     void push(T val) 
     {
         Node_stack<T>* newNode = new Node_stack<T>;
@@ -52,6 +57,57 @@ public:
             cur = cur->next;
         }
         cout << endl;
+    }
+
+    int size() 
+    {
+        int count = 0;
+        Node_stack<T>* cur = head;
+        while (cur != nullptr) 
+        {
+            count++;
+            cur = cur->next;
+        }
+        return count;
+    }
+
+    void sortedInsert(T val)
+    {
+        // If the stack is empty or the value is greater than the top, push the value
+        if (head == nullptr || head->val <= val) 
+        {
+            push(val);
+        } 
+        else 
+        {
+            // Pop the top element
+            T temp = head->val;
+            pop();
+
+            // Recursively insert the value
+            sortedInsert(val);
+
+            // Push the popped element back
+            push(temp);
+        }
+    }
+
+    void sortStack()
+    {
+        if (head == nullptr) 
+        {
+            return;
+        }
+
+        // Pop the top element
+        T top = head->val;
+        pop();
+
+        // Sort the remaining stack
+        sortStack();
+
+        // Insert the popped element in the sorted stack
+        sortedInsert(top);
     }
 };
 

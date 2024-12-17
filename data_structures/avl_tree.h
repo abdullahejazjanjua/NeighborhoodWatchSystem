@@ -7,7 +7,6 @@
 using namespace std;
 
 template <typename T>
-
 struct Node_tree 
 {
     T obj; // The object storing details
@@ -204,17 +203,28 @@ public:
     {
         root = deleteNode(root, key);
     }
-    void getResidentInfo(int key) 
+    Node_tree<T>* getResidentInfo(int key, bool GetObject=false) 
     {
         Node_tree<T>* result = retrieveResident(root, key);
-        if (result) {
-            result->obj.introduceNeightbour();
+        if (result) 
+        {
+            if(GetObject)
+            {
+                return result;
+            }
+            else
+            {
+                result->obj.introduceNeightbour();
+                return nullptr;
+            }
         } 
         else 
         {
             cout << "\nSeems like you have gone out of this neighbourhood\n";
+            return nullptr;
         }
     }
+
 
 };
 

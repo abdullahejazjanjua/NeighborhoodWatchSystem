@@ -2,6 +2,7 @@
 #define GRAPH_H
 #include "Queue.h"
 #include <iostream>
+#include <cstring>
 using namespace std;
 
 struct Node_graph {
@@ -76,27 +77,32 @@ public:
         return houses;
     }
 
-    void DFS(int start) {
-        bool* visited = new bool[size]();
-        DFSHelper(start, visited);
-        cout << endl;
-        delete[] visited;
-    }
+    int* DFS(int start) 
+    {
+    int* movements = new int[size];  
+    memset(movements, -1, sizeof(int) * size); 
 
-    void DFSHelper(int vertex, bool* visited) {
-        visited[vertex] = true;
-        cout << vertex << " ";
+    bool* visited = new bool[size]();  
+    int i = 0;  
+    DFSHelper(start, visited, movements, i); 
+    delete[] visited;
+    return movements;
+}
 
+void DFSHelper(int vertex, bool* visited, int* movements, int& i) 
+{
+    visited[vertex] = true;
+    movements[i++] = vertex;  
 
-        Node_graph* temp = adjacencyList[vertex];
-        while (temp) {
-            int adjVertex = temp->val;
-            if (!visited[adjVertex]) {
-                DFSHelper(adjVertex, visited);
-            }
-            temp = temp->next;
+    Node_graph* temp = adjacencyList[vertex];
+    while (temp) {
+        int adjVertex = temp->val;
+        if (!visited[adjVertex]) {
+            DFSHelper(adjVertex, visited, movements, i);  // Pass i by reference
         }
+        temp = temp->next;
     }
+}
 
     ~Graph() {
 
